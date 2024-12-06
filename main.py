@@ -58,6 +58,19 @@ def train(args, model, optimizer, writer):
             # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10)
 
             # backward, depending on mixed-precision
+            # model.zero_grad() 和 optimizer.zero_grad() 在深度学习框架（例如 PyTorch）中用于清除梯度，但它们的作用范围和具体实现有所不同。
+            # model.zero_grad()
+            # 功能: model.zero_grad() 是在模型（如神经网络）上调用的，它会将 model 中所有参数的梯度置为零。
+            # 作用范围: 这个方法会遍历模型中的所有参数（通常是 torch.nn.Module 的子类，这是个问题，因为有些模型参数可能是根据nn.Parameters定义的，而并非属于nn.Module类，
+            #          torch.nn.Parameter 是 PyTorch 中用于表示模型参数的一个类。它是一个张量（tensor），并且在被加入到 nn.Module 时，会自动被注册为该模块的可学习参数），
+            #          并将每个参数的 .grad 属性设置为 None 或零。
+            # 使用场景: 通常在进行一次训练迭代之前调用，以确保在执行反向传播时不会累加先前迭代的梯度。
+            #
+            # optimizer.zero_grad()
+            # 功能: optimizer.zero_grad() 是在优化器对象上调用的，它的作用也是清零与优化器关联的所有参数的梯度。
+            # 作用范围: 这个方法只会清除优化器所管理的参数的梯度，通常是那些在创建优化器时指定的参数。
+            #          比如，如果你只为部分模型参数创建了优化器，那么调用 optimizer.zero_grad() 只会清除这些参数的梯度。
+            # 使用场景: 同样，在每次调用 optimizer.step()（更新参数之前）之前，通常需要调用这个方法来重置梯度。
             model.zero_grad()
             if args.fp16:
                 with amp.scale_loss(loss, optimizer) as scaled_loss:
@@ -88,6 +101,7 @@ def train(args, model, optimizer, writer):
 
         avg_loss = loss_epoch / len(train_loader)
         writer.add_scalar("Loss/train", avg_loss, epoch)
+        # 使用ex.log_scalar()函数记录了实验结果的准确度。
         ex.log_scalar("loss.train", avg_loss, epoch)
 
         conv = 0
@@ -117,8 +131,17 @@ def train(args, model, optimizer, writer):
         args.current_epoch += 1
 
 
+# 接下来，我们定义了一个main()函数作为实验的主体部分，
+# 并使用Sacred装饰器@ex.automain将其指定为自动运行的函数。
 @ex.automain
 def main(_run, _log):
+    # 利用这招可以将config文件夹下的所有的.yaml文件都整合成一个字典
+    # _run: 通常是一个对象，包含与当前实验运行相关的信息，包括配置、状态等。
+    # _log: 通常用于记录日志信息，帮助用户跟踪实验的执行过程。
+    #  _run.config 代表当前实验运行的配置，通常是一个字典形式。
+    #  这里的配置可能来自于多个 YAML 配置文件的合并结果。
+    #  argparse.Namespace(**_run.config) 将这个配置字典解包为命名空间的形式，
+    #  使得可以通过属性访问的方式来使用这些配置值，例如：args.some_config_value。
     args = argparse.Namespace(**_run.config)
 
     if len(_run.observers) > 1:

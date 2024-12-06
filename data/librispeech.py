@@ -7,11 +7,17 @@ from collections import defaultdict
 
 
 def default_loader(path):
+    # 加载多种格式的音频文件，并将其转换为PyTorch张量。
     return torchaudio.load(path, normalization=False)
 
 
 def default_flist_reader(flist):
     item_list = []
+    # defaultdict是Python标准库collections模块中的一个类，它继承自内置的dict类型 ，
+    # 但是添加了一个额外的功能：当尝试访问一个不存在的键时，
+    # defaultdict会自动提供一个默认值。这个特性对于数据聚合、计数以及初始化复杂的嵌套数据结构特别有用。
+    # 创建defaultdict实例需要传入一个函数作为参数 ，这个函数在键不存在时会被调用来生成默认值。
+    # 常见的函数如int, list, set等可以用于创建不同类型的默认值。
     speaker_dict = defaultdict(list)
     index = 0
     with open(flist, "r") as rf:

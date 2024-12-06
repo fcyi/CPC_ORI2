@@ -3,6 +3,7 @@ import torch
 
 from data.librispeech import LibriDataset
 
+
 def librispeech_loader(opt, num_workers=16):
 
     if opt.validate:

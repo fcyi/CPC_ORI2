@@ -2,7 +2,7 @@
 eval "$(conda shell.bash hook)"
 
 # set CUDA_HOME (to PyTorch cuda version)
-export CUDA_HOME=/usr/local/cuda-10.1
+export CUDA_HOME=/usr/local/cuda-11.8
 
 # make directories for apex
 mkdir -p ~/lib && cd ~/lib

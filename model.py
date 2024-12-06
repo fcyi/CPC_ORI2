@@ -39,7 +39,6 @@ def load_model(args, reload_model=False):
         model_fp = os.path.join(args.model_path, "checkpoint_{}.tar".format(load_epoch))
         model.load_state_dict(torch.load(model_fp))
 
-
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
 
     if args.fp16:
@@ -58,6 +57,7 @@ def load_model(args, reload_model=False):
     args.num_gpu = torch.cuda.device_count()
     print("Using {} GPUs".format(args.num_gpu))
 
+    # 让模型并行化运行
     model = torch.nn.DataParallel(model)
     model = model.to(args.device)
     args.batch_size = args.batch_size * args.num_gpu

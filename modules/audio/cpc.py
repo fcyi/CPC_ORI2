@@ -3,6 +3,7 @@ from .encoder import Encoder
 from .autoregressor import Autoregressor
 from .infonce import InfoNCE
 
+
 class CPC(torch.nn.Module):
     def __init__(
         self, args, strides, filter_sizes, padding, genc_input, genc_hidden, gar_hidden,
@@ -47,15 +48,14 @@ class CPC(torch.nn.Module):
             x = x.half()
 
         # calculate latent represention from the encoder
-        z = self.encoder(x)
-        z = z.permute(0, 2, 1)  # swap L and C
+        z = self.encoder(x)  # B, 1, L ->　B, C, L'
+        z = z.permute(0, 2, 1)  # swap L and C, B, C, L' -> B, L', C
 
         # calculate latent representation from the autoregressor
-        c = self.autoregressor(z)
+        c = self.autoregressor(z)  # B, L', C -> B, L', C'
 
         # TODO checked
         return z, c
-
 
     def forward(self, x):
         z, c = self.get_latent_representations(x)
